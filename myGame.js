@@ -4,6 +4,8 @@ const char = {
     posX: 40/2,
     color: "rgb(255, 0 ,0)",
 
+    direction: "direita",
+
     mover: function(direction) {
         switch (direction) {
             case "cima":
@@ -14,6 +16,7 @@ const char = {
             case "baixo":
                 if(this.posY + 40 < 600) {
                     this.posY += 40;
+                    this.rot = 90;
                 }
                 break;
             case "direita":
@@ -27,7 +30,30 @@ const char = {
                 }
                 break;
         }
+        this.direction = direction;
         this.changeColor();
+    },
+
+    draw: function(ctx) {
+        ctx.moveTo(this.posX, this.posY);
+        ctx.beginPath();
+        ctx.fillStyle = this.color;
+        switch (this.direction) {
+            case "cima":
+                ctx.arc(this.posX, this.posY, this.size/2, Math.PI * 1.25, Math.PI * 1.75, true);
+                break;
+            case "baixo":
+                ctx.arc(this.posX, this.posY, this.size/2, Math.PI * 0.75, Math.PI * 0.25, false);
+                break;
+            case "direita":
+                ctx.arc(this.posX, this.posY, this.size/2, Math.PI * 0.25, Math.PI * 1.75, false);
+                break;
+            case "esquerda":
+                ctx.arc(this.posX, this.posY, this.size/2, Math.PI * 1.25, Math.PI * 0.75, false);
+                break;
+        }
+        ctx.lineTo(this.posX, this.posY);
+        ctx.fill();
     },
 
     changeColor: function() {
@@ -52,11 +78,7 @@ function draw() {
         }
     }
 
-    ctx.moveTo(char.posX, char.posY);
-    ctx.beginPath();
-    ctx.fillStyle = char.color;
-    ctx.arc(char.posX, char.posY, char.size/2 ,0, Math.PI * 2);
-    ctx.fill();
+    char.draw(ctx);
 
     window.requestAnimationFrame(draw);
 

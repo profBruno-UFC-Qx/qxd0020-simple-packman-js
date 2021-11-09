@@ -1,40 +1,86 @@
-const char = {
-    size: 30,
-    posY: 40/2,
-    posX: 40/2,
-    color: "rgb(255, 0 ,0)",
+class Map {
+    constructor(canvas, tileSize) {
+        this.height = canvas.getAttribute("height");
+        this.width = canvas.getAttribute("width");
+        this.tileSize = tileSize;
+        this.canvas = canvas;
+        this.chars = [];
 
-    direction: "direita",
+        this.draw = this.draw.bind(this);
+    }
 
-    mover: function(direction) {
+    addChar(char) {
+        this.chars.unshift(char);
+    }
+
+    draw (){
+        let ctx = this.canvas.getContext("2d");
+        ctx.fillStyle = "rgb(255, 255, 255)";
+        ctx.fillRect(0, 0, this.width, this.height);
+
+        for (let posY = 0; posY < this.height; posY += this.tileSize) {
+            for (let posX = 0; posX < this.width; posX += this.tileSize) {
+                ctx.moveTo(posX, posY);
+                ctx.fillStyle = "rgb(0,0,0)";
+                ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
+            }
+        }
+
+        for(let char of this.chars) {
+            char.draw(ctx);
+        }
+
+        window.requestAnimationFrame(this.draw);
+    }
+
+    move(char, direction) {
+        let x = char.posX;
+        let y = char.posY;
+
         switch (direction) {
             case "cima":
-                if(this.posY - 40 > 0) {
-                    this.posY -= 40;
-                }
+                y -= char.stepSize;
                 break;
             case "baixo":
-                if(this.posY + 40 < 600) {
-                    this.posY += 40;
-                    this.rot = 90;
-                }
+                y += char.stepSize;
                 break;
             case "direita":
-                if(this.posX + 40 < 600){
-                    this.posX += 40;
-                }
+                x += char.stepSize;
                 break;
             case "esquerda":
-                if(this.posX - 40 > 0 ) {
-                    this.posX -= 40;
-                }
+                x-= char.stepSize;
                 break;
         }
+
+        if(this.canMove(x, y)) {
+            char.mover(x, y, direction);
+        }
+    }
+
+    canMove(x, y) {
+        return (x > 0 && x < this.width && y > 0 && y < this.height);
+    }
+
+}
+
+class Char {
+    constructor(tileSize, size) {
+        this.size = size;
+        this.posY = tileSize/2;
+        this.posX =tileSize/2;
+        this.stepSize = tileSize;
+        this.color = "rgb(255, 0 ,0)";
+        this.direction = "direita";
+    }
+
+    mover(x, y, direction) {
+        this.posX = x;
+        this.posY = y;
         this.direction = direction;
         this.changeColor();
-    },
+    }
 
-    draw: function(ctx) {
+    draw(ctx) {
         ctx.moveTo(this.posX, this.posY);
         ctx.beginPath();
         ctx.fillStyle = this.color;
@@ -54,47 +100,33 @@ const char = {
         }
         ctx.lineTo(this.posX, this.posY);
         ctx.fill();
-    },
+    }
 
-    changeColor: function() {
+    changeColor() {
         this.color = `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
     }
 }
 
-function draw() {
-    let canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = "rgb(255, 255, 255)";
-    ctx.fillRect(0, 0, 600, 600);
 
-    const size = 600 / 15;
+window.onload = function () {
+    let map = new Map(document.getElementById("canvas"), 600 / 15);
+    let pacman = new Char(600 / 15, 30);
+    map.addChar(pacman);
+    map.draw();
 
-    for (let posY = 0; posY < 600; posY += size) {
-        for (let posX = 0; posX < 600; posX += size) {
-            ctx.moveTo(posX, posY);
-            ctx.fillStyle = "rgb(0,0,0)";
-            ctx.strokeRect(posX, posY, size, size);
-        }
-    }
+    document.addEventListener('keydown', (event) => {
+        const keyName = event.key;
+        const direction = {
+            ArrowUp: "cima",
+            ArrowDown: "baixo",
+            ArrowLeft: "esquerda",
+            ArrowRight: "direita"
+        };
 
-    char.draw(ctx);
+        map.move(pacman, direction[keyName]);
 
-    window.requestAnimationFrame(draw);
 
+    }, false);
 }
-
-document.addEventListener('keydown', (event) => {
-    const keyName = event.key;
-    const direction = {
-        ArrowUp: "cima",
-        ArrowDown: "baixo",
-        ArrowLeft: "esquerda",
-        ArrowRight: "direita"
-    };
-    char.mover(direction[keyName]);
-
-}, false);
-
-
 
